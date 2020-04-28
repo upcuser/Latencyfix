@@ -31,8 +31,7 @@ public class HitListener extends PacketAdapter {
 		super(main, ListenerPriority.HIGHEST, Collections.singletonList(PacketType.Play.Client.USE_ENTITY));
 		this.main = main;
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	@Override
 	public void onPacketReceiving(PacketEvent e) {
 

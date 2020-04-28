@@ -2,7 +2,6 @@ package com.cryptymdr;
 
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
@@ -12,9 +11,9 @@ import com.cryptymdr.listeners.HitListener;
 
 public class Main extends JavaPlugin implements Listener {
 
-	private HitListener hitListener = null;
-	private AsyncListenerHandler asyncListenerHandler;
-	private ProtocolManager protocolManager;
+	private HitListener 			hitListener = null;
+	private AsyncListenerHandler 	asyncListenerHandler;
+	private ProtocolManager 		protocolManager;
 	
 	private int ms = 80;
 
@@ -34,18 +33,13 @@ public class Main extends JavaPlugin implements Listener {
 	}
 	
 	public void setMS(int ms) { this.ms = ms; }
-	public int getMS() { return this.ms; }
+	public int 	getMS() 	  { return this.ms; }
 
 	private void registerHitListener() {
 		if (this.hitListener == null) {
-			new BukkitRunnable() {
-				@Override
-				public void run() {
-					hitListener = new HitListener(Main.this);
-					asyncListenerHandler = (protocolManager.getAsynchronousManager().registerAsyncHandler(hitListener));
-					asyncListenerHandler.start();
-				}
-			}.runTaskAsynchronously(this);
+			this.hitListener = new HitListener(Main.this);
+			this.asyncListenerHandler = (protocolManager.getAsynchronousManager().registerAsyncHandler(hitListener));
+			this.asyncListenerHandler.start();
 		}
 	}
 
