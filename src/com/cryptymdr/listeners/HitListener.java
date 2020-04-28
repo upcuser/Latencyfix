@@ -3,7 +3,6 @@ package com.cryptymdr.listeners;
 import java.util.Collections;
 
 import org.bukkit.GameMode;
-import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
@@ -19,20 +18,20 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers.EntityUseAction;
 import com.cryptymdr.Main;
-import com.cryptymdr.util.DamageResolver;
+
+import net.minecraft.server.v1_7_R4.EnchantmentManager;
+import net.minecraft.server.v1_7_R4.EntityLiving;
+import net.minecraft.server.v1_7_R4.EntityPlayer;
+import net.minecraft.server.v1_7_R4.GenericAttributes;
 
 public class HitListener extends PacketAdapter {
 	private Main main;
-	private DamageResolver damageResolver;
 
 	public HitListener(Main main) {
 		super(main, ListenerPriority.HIGHEST, Collections.singletonList(PacketType.Play.Client.USE_ENTITY));
 		this.main = main;
-		this.damageResolver = new DamageResolver();
-		if (damageResolver == null)
-			throw new NullPointerException("Damage resolver is null, unsupported Spigot version?");
 	}
-
+	
 	@SuppressWarnings("deprecation")
 	@Override
 	public void onPacketReceiving(PacketEvent e) {
@@ -41,46 +40,46 @@ public class HitListener extends PacketAdapter {
 		Player attacker = e.getPlayer();
 		Entity entity = packet.getEntityModifier(e).read(0);
 		Damageable target = entity instanceof Damageable ? (Damageable) entity : null;
-		World world = attacker.getWorld();
 
 		if (e.getPacketType() == PacketType.Play.Client.USE_ENTITY
 				&& packet.getEntityUseActions().read(0) == EntityUseAction.ATTACK && target != null && !target.isDead()
-				&& world == target.getWorld() && world.getPVP()
 				&& (!(target instanceof Player) || ((Player) target).getGameMode() != GameMode.CREATIVE)) {
 
 			e.setCancelled(true);
 
 			try {
-				double damage = this.damageResolver.getDamage(attacker, target);
-				int attackerPing = ((CraftPlayer) attacker).getHandle().ping;
-
 				EntityDamageByEntityEvent entityDamageByEntityEvent = new EntityDamageByEntityEvent(attacker, target,
-						DamageCause.ENTITY_ATTACK, damage);
+						DamageCause.ENTITY_ATTACK, this.getDamager(attacker, target));
 				main.getServer().getPluginManager().callEvent(entityDamageByEntityEvent);
 
-				if (attackerPing > this.main.ms) {
-					if (!entityDamageByEntityEvent.isCancelled()) {
-						((Damageable) entityDamageByEntityEvent.getEntity()).damage(
-								entityDamageByEntityEvent.getFinalDamage(), entityDamageByEntityEvent.getDamager());
-					}
+				if (((CraftPlayer) attacker).getHandle().ping > this.main.getMS()) {
+					this.registerAttack(entityDamageByEntityEvent);
 					return;
 				}
 
 				new BukkitRunnable() {
 					public void run() {
-						if (!entityDamageByEntityEvent.isCancelled()) {
-							((Damageable) entityDamageByEntityEvent.getEntity()).damage(
-									entityDamageByEntityEvent.getFinalDamage(), entityDamageByEntityEvent.getDamager());
-						}
+						registerAttack(entityDamageByEntityEvent);
 					}
-				}.runTaskLater(this.main, this.main.ms / 20);
+				}.runTaskLater(this.main, this.main.getMS() / 20);
 			} catch (Exception err) {
 				err.printStackTrace();
 			}
 		}
 	}
-
-	public void stop() {
-		this.damageResolver = null;
+	
+	private double getDamager(Player attacker, Damageable target) {
+		EntityPlayer nmsp = ((CraftPlayer) attacker).getHandle();
+		EntityPlayer nmse = ((CraftPlayer) target).getHandle();
+		double damage = nmsp.getAttributeInstance(GenericAttributes.e).getValue();
+		damage += EnchantmentManager.a((EntityLiving) nmsp, (EntityLiving) nmse);
+		return damage;
+	}
+	
+	private void registerAttack(EntityDamageByEntityEvent entityDamageByEntityEvent) {
+		if (!entityDamageByEntityEvent.isCancelled()) {
+			((Damageable) entityDamageByEntityEvent.getEntity()).damage(
+					entityDamageByEntityEvent.getFinalDamage(), entityDamageByEntityEvent.getDamager());
+		}
 	}
 }

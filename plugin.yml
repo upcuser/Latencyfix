@@ -2,7 +2,7 @@ name: kbf
 version: "1.0-RC1"
 author: "Crypty_"
 main: "com.cryptymdr.Main"
-depend: [ ProtocolLib ]
+depend: [ProtocolLib]
 commands:
   ms:
    description: Set ms limit
