@@ -22,16 +22,16 @@ public class MSCommand implements CommandExecutor {
 		}
 		Player player = (Player) sender;
 		if (!player.isOp()) {
-			player.sendMessage("งcYou don't have the permission to use this command!");
+			player.sendMessage("ยงcYou don't have the permission to use this command!");
 			return false;
 		}
 		if (args.length == 0) {
-			player.sendMessage("ง3Usage: ง9/ms <ms>");
-			player.sendMessage("ง3Limit currently set: ง9" + this.main.getMS() + " ง3ms");
+			player.sendMessage("ยง3Usage: ยง9/ms <ms>");
+			player.sendMessage("ยง3Limit currently set: ยง9" + this.main.getMS() + " ยง3ms");
 			return false;
 		}
 		this.main.setMS(Integer.valueOf(args[0]));
-		player.sendMessage("ง3You've set the limit at ง9" + this.main.getMS() + " ง3ms.");
-		return false;
+		player.sendMessage("ยง3You've set the limit at ยง9" + this.main.getMS() + " ยง3ms.");
+		return true;
 	}
 }
